@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +11,30 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Redirect already-authenticated visitors before rendering the form so
+  // they never see a flash of the login UI.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+        if (!cancelled && res.ok) {
+          router.replace("/activity");
+          return;
+        }
+      } catch {
+        // Network error — just show the form.
+      }
+      if (!cancelled) setCheckingAuth(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  if (checkingAuth) return null;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
