@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api';
 import { formatAmount } from '@/lib/format';
 
 interface PaymentLink {
@@ -32,10 +33,9 @@ export default function LinksPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/links', {
+      const res = await apiFetch('/links', {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        credentials: 'include',
       });
       if (!res.ok) {
         throw new Error(`Failed to load links (${res.status})`);
@@ -90,10 +90,9 @@ export default function LinksPage() {
       setDeactivatingId(link.id);
       setError(null);
       try {
-        const res = await fetch(`/api/links/${encodeURIComponent(link.id)}`, {
+        const res = await apiFetch(`/links/${encodeURIComponent(link.id)}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ active: false }),
         });
         if (!res.ok) {
@@ -133,7 +132,7 @@ export default function LinksPage() {
 
       {loading ? (
         <div className="empty">Loading links…</div>
-      ) : links.length === 0 ? (
+      ) : error ? null : links.length === 0 ? (
         <div className="empty">
           No payment links yet.
           <br />
